@@ -1,0 +1,12 @@
+# Unity editor/build artifacts
+Library/
+Temp/
+Obj/
+Builds/
+Build/
+
+# Generated WebGL distribution artifacts
+dist/
+*.zip
+*.wasm
+*.data
