@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VIVERSE Avatar MVP</title>
+    <link rel="stylesheet" href="./TemplateData/style.css" />
+    <script src="https://www.viverse.com/static-assets/viverse-sdk/index.umd.cjs"></script>
+  </head>
+  <body>
+    <main class="container">
+      <h1>VIVERSE Avatar MVP (WebGL Stub Shell)</h1>
+      <p class="note">
+        This package is a VIVERSE upload-compatible WebGL shell with auth + avatar-fetch wiring. Unity WebGL runtime files are placeholders in this environment.
+      </p>
+
+      <section>
+        <h2>Authentication</h2>
+        <button id="auth-button" type="button">Check Auth</button>
+        <pre id="auth-output">Auth status: pending</pre>
+      </section>
+
+      <section>
+        <h2>Avatar</h2>
+        <button id="avatar-button" type="button" disabled>Fetch Avatar</button>
+        <pre id="avatar-output">Avatar result: pending</pre>
+      </section>
+
+      <section>
+        <h2>Unity WebGL Placeholder</h2>
+        <p>
+          Placeholder build files are present in <code>Build/</code> so that ZIP structure matches VIVERSE Studio expectations. Replace with actual Unity WebGL build output for production.
+        </p>
+      </section>
+    </main>
+
+    <script type="module">
+      const clientId = "hd87jpxy88";
+      const domain = "account.htcvive.com";
+
+      const authOutput = document.getElementById("auth-output");
+      const avatarOutput = document.getElementById("avatar-output");
+      const avatarButton = document.getElementById("avatar-button");
+      const authButton = document.getElementById("auth-button");
+
+      const setAuthOutput = (message) => {
+        authOutput.textContent = message;
+      };
+
+      const setAvatarOutput = (message) => {
+        avatarOutput.textContent = message;
+      };
+
+      const initializeClient = () => {
+        if (!globalThis.viverse || !globalThis.viverse.client) {
+          throw new Error("VIVERSE SDK did not load. Verify network access to index.umd.cjs.");
+        }
+
+        globalThis.viverseClient = new globalThis.viverse.client({
+          clientId,
+          domain,
+        });
+      };
+
+      const formatAuth = (auth) => {
+        if (!auth) {
+          return "Auth undefined: loginWithWorlds() invoked for SSO refresh.";
+        }
+
+        return [
+          `Authenticated`,
+          `account_id: ${auth.account_id ?? "(missing)"}`,
+          `expires_at: ${auth.expires_at ?? "(missing)"}`,
+        ].join("\n");
+      };
+
+      const checkAuthFlow = async () => {
+        try {
+          const auth = await globalThis.viverseClient.checkAuth();
+          if (typeof auth === "undefined") {
+            setAuthOutput("Auth undefined. Starting loginWithWorlds()...");
+            await globalThis.viverseClient.loginWithWorlds();
+            return;
+          }
+
+          setAuthOutput(formatAuth(auth));
+          avatarButton.disabled = !auth.access_token;
+          return auth;
+        } catch (error) {
+          setAuthOutput(`Auth error: ${error.message}`);
+          avatarButton.disabled = true;
+          return null;
+        }
+      };
+
+      const fetchAvatar = async () => {
+        try {
+          const auth = await globalThis.viverseClient.checkAuth();
+          if (!auth || !auth.access_token) {
+            setAvatarOutput("Avatar fetch blocked: missing access_token. Re-authenticate first.");
+            return;
+          }
+
+          // TODO: Replace with concrete VIVERSE Avatar SDK endpoint/method when available in this SDK version.
+          // Stub is intentionally explicit rather than pretending Unity/avatar integration exists in this environment.
+          setAvatarOutput([
+            "Avatar SDK integration TODO",
+            "Received access_token and auth context successfully.",
+            "Next step: call official Avatar API and map response.vrmUrl into Unity loader bridge.",
+          ].join("\n"));
+        } catch (error) {
+          setAvatarOutput(`Avatar fetch error: ${error.message}`);
+        }
+      };
+
+      window.addEventListener("load", async () => {
+        try {
+          initializeClient();
+          await checkAuthFlow();
+        } catch (error) {
+          setAuthOutput(`Initialization error: ${error.message}`);
+        }
+      });
+
+      authButton.addEventListener("click", checkAuthFlow);
+      avatarButton.addEventListener("click", fetchAvatar);
+    </script>
+  </body>
+</html>
